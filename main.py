@@ -46,7 +46,6 @@ class Form(QW.QWidget):
                 parent=self.canvas.viewbox.scene,
                 color=CURVE_COLOR[i],
                 method='gl',
-                connect='strip',
                 antialias=False))
         buttonLayout1.addWidget(self.canvas.canvas.native)
         self.canvas.canvas.show()
@@ -80,6 +79,7 @@ class Form(QW.QWidget):
         to_update = False
         xvals = list(range(0,self.data.xmax))
         for i in range(0, NUM_CURVES):
+            print("Pos: {}".format(self.data.data_channel(i)))
             self.canvas.lines[i].set_data(pos=np.rot90(np.array([xvals,
                                                                  self.data.data_channel(i)])))
         if self.auto_update:

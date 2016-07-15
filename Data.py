@@ -1,6 +1,6 @@
 import PyQt5.QtCore as QC
 import numpy as np
-
+import math
 
 class Data(QC.QObject):
     """The class handling the data, to store and give to matplotlib"""
@@ -9,7 +9,7 @@ class Data(QC.QObject):
 
     def __init__(self):
         self.buffer = b''
-        self.data = [[]]*self.NUM_CURVES
+        self.data = [[] for i in range(0,self.NUM_CURVES)]
         self.ymin = 0
         self.ymax = 0
         super().__init__()
@@ -27,7 +27,7 @@ class Data(QC.QObject):
             return False
         for channel in range(0, len(data)):
             if data[channel] < self.ymin:
-                self.ymin = data[channel]
+                self.ymin = math.floor(data[channel])
             elif data[channel] > self.ymax:
                 self.ymax = data[channel]
 
@@ -37,8 +37,6 @@ class Data(QC.QObject):
         self.timer = timer
 
     def data_channel(self, channel):
-        length = self.xmax
-
         out = np.array(self.data[channel])
 
         return out

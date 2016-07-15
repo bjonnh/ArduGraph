@@ -8,7 +8,7 @@ class SerialComm(QC.QObject):
         super().__init__()
         self.info = QS.QSerialPortInfo()
         self.data = data
-        self.speed = 115200
+        self.speed = 9600
         self.port = None
         self.buffer = b""
         self.timer = QC.QTimer(self)
@@ -46,30 +46,32 @@ class SerialComm(QC.QObject):
 
     def internal_update(self):
         bytesToRead = self.port.bytesAvailable()
-
+        appended = False
         self.buffer += bytes(self.port.readAll())  # Data(bytesToRead)
-
+        print(self.buffer)
         found = 1
-        while found == 1:
-            try:
-                idx = self.buffer.index(b'\n')
-                rawval = self.buffer[0:idx].strip()
-                if b',' in rawval:
-                    value = [float(i)
-                             for i in rawval.split(b',')]
-                else:
+        while len(self.buffer)>0:
+            if b'\n' not in self.buffer:
+                break
+            idx = self.buffer.index(b'\n')
+            rawval = self.buffer[0:idx].strip()
+            value = None
+            if b',' in rawval:
+                a = [i for i in rawval.split(b',')]
+                if len(a) == self.data.NUM_CURVES:
+                    try:
+                        value = [int(100*float(i))
+                                 for i in a]
+                    except ValueError:
+                        value = None
 
-                    value = None
-
-                self.buffer = self.buffer[idx+1:]
-                found = 1
-                if value is not None:
-                    self.data.append(value)
-
-            except ValueError:
-                found = 0
-
-        self.data.updated.emit()
+            self.buffer = self.buffer[idx+1:]
+            if value is not None and len(value)==self.data.NUM_CURVES:
+                print("Appending {}".format(value))
+                self.data.append(value)
+                appended = True
+        if appended is True:
+            self.data.updated.emit()
 
     def stop(self):
         self.running = False
