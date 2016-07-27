@@ -17,8 +17,11 @@ CURVE_COLOR = [[0.5, 0.5, 1, 1],
                [1, 0.5, 0.5, 1]]
 
 # Add the scaling indicator
+# Add running indicator
+# Add quit button
+# Add saving data
+# Add loading data
 # Clean up interface
-# 
 
 class Form(QW.QWidget):
     def __init__(self, parent=None):
@@ -32,7 +35,8 @@ class Form(QW.QWidget):
         self.serialcomm = SerialComm(self.data)
         self.devicewindow = DeviceWindow(self.serialcomm,
                                          self)
-        self.automode = QW.QPushButton("Auto scaling")
+        self.automode = QW.QCheckBox("Auto scaling")
+        self.automode.setCheckState(QC.Qt.Checked)
         self.stop = QW.QPushButton("Stop")
         self.resetaxis = QW.QPushButton("Reset axis")
         self.devicebutton = QW.QPushButton("Devices")
@@ -59,7 +63,7 @@ class Form(QW.QWidget):
         buttonLayout1.addWidget(self.canvas.canvas.native)
         self.canvas.canvas.show()
         self.resetaxis.clicked.connect(self.reset_range)
-        self.automode.clicked.connect(self.autoswitch)
+        self.automode.stateChanged.connect(self.autoswitch)
         self.devicebutton.clicked.connect(self.devicewindow.show)
         self.configbutton.clicked.connect(self.configwindow.show)
         self.stop.clicked.connect(self.serialcomm.stop)
@@ -72,12 +76,16 @@ class Form(QW.QWidget):
         self.setLayout(mainLayout)
         self.setWindowTitle("ArduGraph")
 
-    def autoswitch(self):
-        self.auto_update = True
+    def autoswitch(self, signal):
+        if signal == QC.Qt.Checked:
+            self.auto_update = True
+        else:
+            self.auto_update = False
 
     def autooff(self, *args, **kwargs):
         print("Auto off")
         self.auto_update = False
+        self.automode.setCheckState(QC.Qt.Unchecked)
 
     def update_figure(self):
         self.to_update = True
