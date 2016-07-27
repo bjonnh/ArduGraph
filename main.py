@@ -16,10 +16,10 @@ CURVE_COLOR = [[0.5, 0.5, 1, 1],
                [0.5, 1, 0.5, 1],
                [1, 0.5, 0.5, 1]]
 
-# Add quit button
 # Add saving data
 # Add loading data
 # Clean up interface
+# Handle device errors (e.g. disable start button if it happens)
 
 class Form(QW.QWidget):
     def __init__(self, parent=None):
@@ -40,9 +40,10 @@ class Form(QW.QWidget):
         self.resetaxis = QW.QPushButton("Reset axis")
         self.devicebutton = QW.QPushButton("Devices")
         self.configbutton = QW.QPushButton("Configuration")
+        self.quitbutton = QW.QPushButton("Quit")
         self.redraw_timer = QC.QTimer()
-        
-        buttonLayout1 = QW.QVBoxLayout()
+        layout = QW.QVBoxLayout()        
+        buttonLayout1 = QW.QHBoxLayout()
         buttonLayout1.addWidget(self.startbutton)
         buttonLayout1.addWidget(self.stopbutton)
         self.startbutton.hide()
@@ -51,7 +52,7 @@ class Form(QW.QWidget):
         buttonLayout1.addWidget(self.resetaxis)
         buttonLayout1.addWidget(self.devicebutton)
         buttonLayout1.addWidget(self.configbutton)
-
+        buttonLayout1.addWidget(self.quitbutton)
         self.canvas = Canvas()
         self.canvas.canvas.events.mouse_wheel.connect(self.autooff)
         self.canvas.canvas.events.mouse_press.connect(self.autooff)
@@ -62,12 +63,13 @@ class Form(QW.QWidget):
                 color=CURVE_COLOR[i],
                 method='gl',
                 antialias=False))
-        buttonLayout1.addWidget(self.canvas.canvas.native)
+        layout.addWidget(self.canvas.canvas.native)
         self.canvas.canvas.show()
         self.resetaxis.clicked.connect(self.reset_range)
         self.automode.stateChanged.connect(self.autoswitch)
         self.devicebutton.clicked.connect(self.devicewindow.show)
         self.configbutton.clicked.connect(self.configwindow.show)
+        self.quitbutton.clicked.connect(self.quit)
         self.serialcomm.started.connect(self.start)
         self.serialcomm.stoped.connect(self.stop)
         self.stopbutton.clicked.connect(self.serialcomm.stop)
@@ -76,10 +78,14 @@ class Form(QW.QWidget):
 
         mainLayout = QW.QGridLayout()
         mainLayout.addLayout(buttonLayout1, 0, 1)
+        mainLayout.addLayout(layout, 1, 1)
         self.redraw_timer.start(1000)
         self.redraw_timer.timeout.connect(self.internal_update_figure)
         self.setLayout(mainLayout)
         self.setWindowTitle("ArduGraph")
+
+    def quit(self):
+        self.close()
 
     def start(self):
         self.startbutton.hide()
@@ -96,7 +102,6 @@ class Form(QW.QWidget):
             self.auto_update = False
 
     def autooff(self, *args, **kwargs):
-        print("Auto off")
         self.auto_update = False
         self.automode.setCheckState(QC.Qt.Unchecked)
 
@@ -119,6 +124,15 @@ class Form(QW.QWidget):
         self.canvas.viewbox.camera.set_range(x=[0, self.data.xmax],
                                              y=[self.data.ymin,
                                                 self.data.ymax])
+    def closeEvent(self, event):
+        event.ignore()
+        if (QW.QMessageBox.Yes == QW.QMessageBox.question(
+                self,
+                "Do you want to exit?",
+                "Are you sure you want to exit?",
+                QW.QMessageBox.Yes|QW.QMessageBox.No
+        )):
+            event.accept()
 
 if __name__ == '__main__':
     import sys
