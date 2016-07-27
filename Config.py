@@ -23,7 +23,7 @@ class ConfigModel(QC.QAbstractTableModel):
         if role == QC.Qt.DisplayRole:
             if orientation == QC.Qt.Vertical:
                 return QC.QVariant(self.config.get_name(section))
-
+            
     def flags(self, index):
         """Make only the values editable"""
         flags = super().flags(index)
@@ -61,6 +61,9 @@ class Config(QC.QObject):
                             'channel2': 'Channel 2'}
         super().__init__()
         self.load()
+
+    def headers(self):
+        return [self.data[param] for param in self.parameters]
 
     def get(self, row):
         if row >= len(self.parameters):

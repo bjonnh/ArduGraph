@@ -16,7 +16,7 @@ CURVE_COLOR = [[0.5, 0.5, 1, 1],
                [0.5, 1, 0.5, 1],
                [1, 0.5, 0.5, 1]]
 
-# Add saving data
+# Add timing to data
 # Add loading data
 # Clean up interface
 # Handle device errors (e.g. disable start button if it happens)
@@ -40,8 +40,10 @@ class Form(QW.QWidget):
         self.resetaxis = QW.QPushButton("Reset axis")
         self.devicebutton = QW.QPushButton("Devices")
         self.configbutton = QW.QPushButton("Configuration")
+        self.savebutton = QW.QPushButton("Save")
         self.quitbutton = QW.QPushButton("Quit")
         self.redraw_timer = QC.QTimer()
+        self.backup_timer = QC.QTimer()
         layout = QW.QVBoxLayout()        
         buttonLayout1 = QW.QHBoxLayout()
         buttonLayout1.addWidget(self.startbutton)
@@ -52,6 +54,7 @@ class Form(QW.QWidget):
         buttonLayout1.addWidget(self.resetaxis)
         buttonLayout1.addWidget(self.devicebutton)
         buttonLayout1.addWidget(self.configbutton)
+        buttonLayout1.addWidget(self.savebutton)
         buttonLayout1.addWidget(self.quitbutton)
         self.canvas = Canvas()
         self.canvas.canvas.events.mouse_wheel.connect(self.autooff)
@@ -69,6 +72,7 @@ class Form(QW.QWidget):
         self.automode.stateChanged.connect(self.autoswitch)
         self.devicebutton.clicked.connect(self.devicewindow.show)
         self.configbutton.clicked.connect(self.configwindow.show)
+        self.savebutton.clicked.connect(self.save)
         self.quitbutton.clicked.connect(self.quit)
         self.serialcomm.started.connect(self.start)
         self.serialcomm.stoped.connect(self.stop)
@@ -80,12 +84,25 @@ class Form(QW.QWidget):
         mainLayout.addLayout(buttonLayout1, 0, 1)
         mainLayout.addLayout(layout, 1, 1)
         self.redraw_timer.start(1000)
+        self.backup_timer.start(30000)
         self.redraw_timer.timeout.connect(self.internal_update_figure)
+        self.backup_timer.timeout.connect(self.tempsave)
         self.setLayout(mainLayout)
         self.setWindowTitle("ArduGraph")
 
     def quit(self):
         self.close()
+
+    def save(self):
+        filename = QW.QFileDialog.getSaveFileName(self, 'Save File', '.')
+        fname = open(filename[0], 'w')
+        self.data.csv_data(fname, self.config.headers())
+        fname.close()
+
+    def tempsave(self):
+        fname = open("lastrun.csv", 'w')
+        self.data.csv_data(fname, self.config.headers())
+        fname.close()
 
     def start(self):
         self.startbutton.hide()

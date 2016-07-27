@@ -1,4 +1,6 @@
 *~
 venv
 modules
+lastrun.csv
+config.json
 __pycache__

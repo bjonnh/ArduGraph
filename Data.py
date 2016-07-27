@@ -1,6 +1,8 @@
 import PyQt5.QtCore as QC
 import numpy as np
 import math
+import csv
+
 
 class Data(QC.QObject):
     """The class handling the data"""
@@ -40,3 +42,11 @@ class Data(QC.QObject):
         out = np.array(self.data[channel])
 
         return out
+
+    def csv_data(self, ofile, headers=None):
+        if headers is None:
+            headers = []
+        writer = csv.writer(ofile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
+        writer.writerow(headers)
+        for i in range(0,len(self.data[0])):
+            writer.writerow([self.data[0][i], self.data[1][i]])
