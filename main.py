@@ -16,8 +16,6 @@ CURVE_COLOR = [[0.5, 0.5, 1, 1],
                [0.5, 1, 0.5, 1],
                [1, 0.5, 0.5, 1]]
 
-# Add the scaling indicator
-# Add running indicator
 # Add quit button
 # Add saving data
 # Add loading data
@@ -37,14 +35,18 @@ class Form(QW.QWidget):
                                          self)
         self.automode = QW.QCheckBox("Auto scaling")
         self.automode.setCheckState(QC.Qt.Checked)
-        self.stop = QW.QPushButton("Stop")
+        self.startbutton = QW.QPushButton("Start")
+        self.stopbutton = QW.QPushButton("Stop")
         self.resetaxis = QW.QPushButton("Reset axis")
         self.devicebutton = QW.QPushButton("Devices")
         self.configbutton = QW.QPushButton("Configuration")
         self.redraw_timer = QC.QTimer()
         
         buttonLayout1 = QW.QVBoxLayout()
-        buttonLayout1.addWidget(self.stop)
+        buttonLayout1.addWidget(self.startbutton)
+        buttonLayout1.addWidget(self.stopbutton)
+        self.startbutton.hide()
+        self.stopbutton.hide()
         buttonLayout1.addWidget(self.automode)
         buttonLayout1.addWidget(self.resetaxis)
         buttonLayout1.addWidget(self.devicebutton)
@@ -66,7 +68,10 @@ class Form(QW.QWidget):
         self.automode.stateChanged.connect(self.autoswitch)
         self.devicebutton.clicked.connect(self.devicewindow.show)
         self.configbutton.clicked.connect(self.configwindow.show)
-        self.stop.clicked.connect(self.serialcomm.stop)
+        self.serialcomm.started.connect(self.start)
+        self.serialcomm.stoped.connect(self.stop)
+        self.stopbutton.clicked.connect(self.serialcomm.stop)
+        self.startbutton.clicked.connect(self.serialcomm.connect)
         self.data.updated.connect(self.update_figure)
 
         mainLayout = QW.QGridLayout()
@@ -76,6 +81,14 @@ class Form(QW.QWidget):
         self.setLayout(mainLayout)
         self.setWindowTitle("ArduGraph")
 
+    def start(self):
+        self.startbutton.hide()
+        self.stopbutton.show()
+
+    def stop(self):
+        self.startbutton.show()
+        self.stopbutton.hide()
+        
     def autoswitch(self, signal):
         if signal == QC.Qt.Checked:
             self.auto_update = True
@@ -93,10 +106,9 @@ class Form(QW.QWidget):
     def internal_update_figure(self):
         if self.to_update is False:
             return
-        to_update = False
+        self.to_update = False
         xvals = list(range(0,self.data.xmax))
         for i in range(0, NUM_CURVES):
-            print("Pos: {}".format(self.data.data_channel(i)))
             self.canvas.lines[i].set_data(pos=np.rot90(np.array([xvals,
                                                                  self.data.data_channel(i)])))
         if self.auto_update:

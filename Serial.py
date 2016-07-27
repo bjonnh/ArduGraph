@@ -4,6 +4,8 @@ import PyQt5.QtWidgets as QW
 import time
 
 class SerialComm(QC.QObject):
+    started = QC.pyqtSignal()
+    stoped = QC.pyqtSignal()
     def __init__(self, data):
         super().__init__()
         self.info = QS.QSerialPortInfo()
@@ -37,18 +39,18 @@ class SerialComm(QC.QObject):
             raise SerialComm.InvalidSerial()
         self.port.setBaudRate(self.speed)
         self.port.readyRead.connect(self.internal_update)
-        print("Port connected")
         self.start()
         return True
 
     def start(self):
+        self.started.emit()
         self.running = True
 
     def internal_update(self):
         bytesToRead = self.port.bytesAvailable()
         appended = False
         self.buffer += bytes(self.port.readAll())  # Data(bytesToRead)
-        print(self.buffer)
+
         found = 1
         while len(self.buffer)>0:
             if b'\n' not in self.buffer:
@@ -67,7 +69,6 @@ class SerialComm(QC.QObject):
 
             self.buffer = self.buffer[idx+1:]
             if value is not None and len(value)==self.data.NUM_CURVES:
-                print("Appending {}".format(value))
                 self.data.append(value)
                 appended = True
         if appended is True:
@@ -75,6 +76,7 @@ class SerialComm(QC.QObject):
 
     def stop(self):
         self.running = False
+        self.stoped.emit()
         self.port.close()
 
     class InvalidSerial(Exception):
@@ -116,10 +118,8 @@ class DeviceWindow(QW.QDialog):
     def update_comm(self):
         self.comm.set_port(self.portlist.currentRow())
         try:
-            print("Trying to connect")
             self.comm.connect()
             self.error.hide()
             self.hide()
         except SerialComm.InvalidSerial:
-            print("Error opening")
             self.error.show()

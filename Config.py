@@ -1,6 +1,5 @@
 import PyQt5.QtCore as QC
 import PyQt5.QtWidgets as QW
-import PyQt5.Qt as Qt
 import json
 
 
