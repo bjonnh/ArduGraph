@@ -6,7 +6,8 @@ from Data import Data
 # from pyqtgraph.Qt import QtGui as QG
 
 from Serial import SerialComm, DeviceWindow
-# import pyqtgraph as pg
+from Config import Config, ConfigWindow
+
 import numpy as np
 from vispy import scene as vps
 
@@ -15,6 +16,9 @@ CURVE_COLOR = [[0.5, 0.5, 1, 1],
                [0.5, 1, 0.5, 1],
                [1, 0.5, 0.5, 1]]
 
+# Add the scaling indicator
+# Clean up interface
+# 
 
 class Form(QW.QWidget):
     def __init__(self, parent=None):
@@ -22,13 +26,17 @@ class Form(QW.QWidget):
         self.auto_update = True
         self.to_update = False
         self.data = Data()
+        self.config = Config()
+        self.configwindow = ConfigWindow(self.config,
+                                         self)
         self.serialcomm = SerialComm(self.data)
         self.devicewindow = DeviceWindow(self.serialcomm,
                                          self)
         self.automode = QW.QPushButton("Auto scaling")
         self.stop = QW.QPushButton("Stop")
         self.resetaxis = QW.QPushButton("Reset axis")
-        self.devicebutton = QW.QPushButton("Device window")
+        self.devicebutton = QW.QPushButton("Devices")
+        self.configbutton = QW.QPushButton("Configuration")
         self.redraw_timer = QC.QTimer()
         
         buttonLayout1 = QW.QVBoxLayout()
@@ -36,6 +44,7 @@ class Form(QW.QWidget):
         buttonLayout1.addWidget(self.automode)
         buttonLayout1.addWidget(self.resetaxis)
         buttonLayout1.addWidget(self.devicebutton)
+        buttonLayout1.addWidget(self.configbutton)
 
         self.canvas = Canvas()
         self.canvas.canvas.events.mouse_wheel.connect(self.autooff)
@@ -49,10 +58,10 @@ class Form(QW.QWidget):
                 antialias=False))
         buttonLayout1.addWidget(self.canvas.canvas.native)
         self.canvas.canvas.show()
-        self.canvas.canvas.swap_buffers()
         self.resetaxis.clicked.connect(self.reset_range)
         self.automode.clicked.connect(self.autoswitch)
         self.devicebutton.clicked.connect(self.devicewindow.show)
+        self.configbutton.clicked.connect(self.configwindow.show)
         self.stop.clicked.connect(self.serialcomm.stop)
         self.data.updated.connect(self.update_figure)
 

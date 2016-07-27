@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 class Data(QC.QObject):
-    """The class handling the data, to store and give to matplotlib"""
+    """The class handling the data"""
     updated = QC.pyqtSignal()
     NUM_CURVES = 2
 
