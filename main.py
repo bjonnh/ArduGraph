@@ -16,7 +16,6 @@ CURVE_COLOR = [[0.5, 0.5, 1, 1],
                [0.5, 1, 0.5, 1],
                [1, 0.5, 0.5, 1]]
 
-# Add timing to data
 # Add loading data
 # Clean up interface
 # Handle device errors (e.g. disable start button if it happens)
@@ -129,9 +128,10 @@ class Form(QW.QWidget):
         if self.to_update is False:
             return
         self.to_update = False
-        xvals = list(range(0,self.data.xmax))
+        print(len(self.data.data_channel(0)))
+        print(len(self.data.time_channel()))
         for i in range(0, NUM_CURVES):
-            self.canvas.lines[i].set_data(pos=np.rot90(np.array([xvals,
+            self.canvas.lines[i].set_data(pos=np.rot90(np.array([self.data.time_channel(),
                                                                  self.data.data_channel(i)])))
         if self.auto_update:
             self.reset_range()

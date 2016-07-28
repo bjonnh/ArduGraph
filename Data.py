@@ -2,7 +2,7 @@ import PyQt5.QtCore as QC
 import numpy as np
 import math
 import csv
-
+import time
 
 class Data(QC.QObject):
     """The class handling the data"""
@@ -14,6 +14,8 @@ class Data(QC.QObject):
         self.data = [[] for i in range(0,self.NUM_CURVES)]
         self.ymin = 0
         self.ymax = 0
+        self.time = []
+        self.offset = None
         super().__init__()
 
     @property
@@ -22,7 +24,7 @@ class Data(QC.QObject):
 
     @property
     def xmax(self):
-        return len(self.data[0])
+        return max(self.time)
 
     def append(self, data):
         if len(data) != self.NUM_CURVES:
@@ -34,19 +36,23 @@ class Data(QC.QObject):
                 self.ymax = data[channel]
 
             self.data[channel] += [data[channel]]
+        if self.offset is None:
+            self.offset = time.time()
+        self.time.append(time.time()-self.offset)
 
     def set_timer(self, timer):
         self.timer = timer
 
     def data_channel(self, channel):
-        out = np.array(self.data[channel])
+        return np.array(self.data[channel])
 
-        return out
+    def time_channel(self):
+        return np.array(self.time)
 
     def csv_data(self, ofile, headers=None):
         if headers is None:
             headers = []
         writer = csv.writer(ofile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
-        writer.writerow(headers)
+        writer.writerow(['Time']+ headers)
         for i in range(0,len(self.data[0])):
-            writer.writerow([self.data[0][i], self.data[1][i]])
+            writer.writerow([self.time[i], self.data[0][i], self.data[1][i]])
