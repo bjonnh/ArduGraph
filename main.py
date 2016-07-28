@@ -18,7 +18,7 @@ CURVE_COLOR = [[0.5, 0.5, 1, 1],
 
 # Add loading data
 # Clean up interface
-# Handle device errors (e.g. disable start button if it happens)
+
 
 class Form(QW.QWidget):
     def __init__(self, parent=None):
@@ -75,6 +75,7 @@ class Form(QW.QWidget):
         self.quitbutton.clicked.connect(self.quit)
         self.serialcomm.started.connect(self.start)
         self.serialcomm.stoped.connect(self.stop)
+        self.serialcomm.disconnected.connect(self.disconnected)
         self.stopbutton.clicked.connect(self.serialcomm.stop)
         self.startbutton.clicked.connect(self.serialcomm.connect)
         self.data.updated.connect(self.update_figure)
@@ -106,6 +107,10 @@ class Form(QW.QWidget):
     def start(self):
         self.startbutton.hide()
         self.stopbutton.show()
+
+    def disconnected(self):
+        self.startbutton.hide()
+        self.stopbutton.hide()
 
     def stop(self):
         self.startbutton.show()
