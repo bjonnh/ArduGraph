@@ -6,6 +6,8 @@ import time
 class SerialComm(QC.QObject):
     started = QC.pyqtSignal()
     stoped = QC.pyqtSignal()
+    disconnected = QC.pyqtSignal()
+
     def __init__(self, data):
         super().__init__()
         self.info = QS.QSerialPortInfo()
@@ -28,24 +30,41 @@ class SerialComm(QC.QObject):
     def set_port(self, port):
         portlist = self.list_ports()
         if port >= 0 and port < len(portlist):
-            self.port = QS.QSerialPort(portlist[port])
+            self.currport = portlist[port]
         else:
-            self.port = None
+            self.currport = None
 
     def connect(self):
-        if self.port is None:
+        if self.currport is None:
             return False
-        if not (self.port.open(QC.QIODevice.ReadWrite)):
-            raise SerialComm.InvalidSerial()
+        else:
+            print (self.currport)
+            print(self.list_ports())
+            if self.currport.serialNumber() not in [port.serialNumber() for port in self.list_ports()]:
+                self.disconnected.emit()
+                return False
+            else:
+                self.port = QS.QSerialPort(self.currport)
+
+        out = self.port.open(QC.QIODevice.ReadWrite)
+        if not out:
+            raise InvalidSerial
+
         self.port.setBaudRate(self.speed)
         self.port.readyRead.connect(self.internal_update)
+        self.port.error.connect(self.error)
+
         self.start()
+
         return True
 
     def start(self):
         self.started.emit()
         self.running = True
 
+    def error(self):
+        self.stop()
+        
     def internal_update(self):
         bytesToRead = self.port.bytesAvailable()
         appended = False
