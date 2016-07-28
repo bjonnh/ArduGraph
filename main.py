@@ -95,6 +95,8 @@ class Form(QW.QWidget):
 
     def save(self):
         filename = QW.QFileDialog.getSaveFileName(self, 'Save File', '.')
+        if filename[0] == '':
+            return
         fname = open(filename[0], 'w')
         self.data.csv_data(fname, self.config.headers())
         fname.close()
